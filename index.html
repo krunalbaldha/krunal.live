@@ -614,27 +614,43 @@
     <script src="lib/isotope/isotope.pkgd.min.js"></script>
     <script src="lib/lightbox/js/lightbox.min.js"></script>
     <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
-        <script>
-            $("#contactForm").on("submit", function (e) {
-                e.preventDefault();
-                $("#submitBtn").prop("disabled", true).text("Sending...");
+    <script>
+        $("#contactForm").on("submit", async function (e) {
+        e.preventDefault(); // stop form from reloading page
+        $("#submitBtn").prop("disabled", true).text("Sending...");
 
-            $.ajax({
-                url: "sendmail.php",
-                type: "POST",
-                data: $(this).serialize(),
-                success: function (response) {
-                    $("#formMessage").html(`<div class="alert alert-success">${response}</div>`);
-                    $("#contactForm")[0].reset();
-                    $("#submitBtn").prop("disabled", false).text("Send Message");
-                },
-                error: function () {
-                    $("#formMessage").html(`<div class="alert alert-danger">Message sending failed. Try again.</div>`);
-                    $("#submitBtn").prop("disabled", false).text("Send Message");
-                }
-            });
+        // Collect form data
+        const formData = {
+            name: $("input[name='name']").val(),
+            email: $("input[name='email']").val(),
+            subject: $("input[name='subject']").val(),
+            message: $("textarea[name='message']").val(),
+        };
+
+        try {
+            // Send AJAX request to your API route
+            const response = await fetch("/api/sendmail", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
         });
-        </script> 
+
+        const result = await response.json();
+
+        if (result.success) {
+            $("#formMessage").html(`<div class="alert alert-success">${result.message}</div>`);
+            $("#contactForm")[0].reset();
+        }   else {
+            $("#formMessage").html(`<div class="alert alert-danger">${result.message}</div>`);
+        }
+      } catch (error) {
+        console.error(error);
+        $("#formMessage").html(`<div class="alert alert-danger">Something went wrong. Try again.</div>`);
+    }
+
+    $("#submitBtn").prop("disabled", false).text("Send Message");
+  });
+</script>
 
     <!-- Template Javascript -->
     <script src="js/main.js"></script>
